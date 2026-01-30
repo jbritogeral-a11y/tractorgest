@@ -16,6 +16,10 @@ SECRET_KEY = 'django-insecure-8eiktsv&8trz00xz9cz!k%vy4iatw^b-)=$#8y34q$pei_m&o6
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+
+# Configuração essencial para o Render (HTTPS)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 CSRF_TRUSTED_ORIGINS = [
     'https://tractorgest.onrender.com',
     'https://*.onrender.com',
