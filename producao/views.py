@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from django.db.models import Q
-from .models import OrdemProducao, TarefaProducao, Funcionario
+from .models import OrdemProducao, TarefaProducao, Funcionario, Posto, Acessorio
 
 @login_required
 def dashboard_funcionario(request):
@@ -17,6 +17,32 @@ def dashboard_funcionario(request):
     # Obtém todos os postos onde este funcionário pode trabalhar
     postos_autorizados = funcionario.postos.all()
     
+    # --- LÓGICA PARA O POSTO 1 (INÍCIO DE PRODUÇÃO) ---
+    # Verifica se o funcionário tem acesso ao primeiro posto da linha
+    primeiro_posto = Posto.objects.order_by('ordem_sequencia').first()
+    e_posto_inicial = False
+    acessorios_disponiveis = []
+
+    if primeiro_posto and primeiro_posto in postos_autorizados:
+        e_posto_inicial = True
+        acessorios_disponiveis = Acessorio.objects.all()
+
+        # Se for um pedido para CRIAR uma nova ordem (Botão Iniciar Produção)
+        if request.method == 'POST' and 'criar_ordem' in request.POST:
+            numero_serie = request.POST.get('numero_serie')
+            acessorio_id = request.POST.get('acessorio')
+            
+            if numero_serie and acessorio_id:
+                # 1. Cria a Ordem
+                nova_ordem = OrdemProducao.objects.create(
+                    numero_serie=numero_serie,
+                    acessorio_id=acessorio_id,
+                    posto_atual=primeiro_posto,
+                    status_global='PENDENTE'
+                )
+                # 2. Redireciona para "iniciar_tarefa" para começar o cronómetro logo
+                return redirect('iniciar_tarefa', ordem_id=nova_ordem.id)
+
     # 2. Verifica se o funcionário já tem alguma tarefa "aberta" (cronómetro a contar)
     tarefa_em_curso = TarefaProducao.objects.filter(
         funcionario=request.user,
@@ -42,6 +68,8 @@ def dashboard_funcionario(request):
     return render(request, 'producao/dashboard.html', {
         'funcionario': funcionario,
         'postos': postos_autorizados,
+        'e_posto_inicial': e_posto_inicial,
+        'acessorios': acessorios_disponiveis,
         'tarefa_em_curso': tarefa_em_curso,
         'ordens_agendadas': ordens_agendadas,
         'ordens_gerais': ordens_gerais,

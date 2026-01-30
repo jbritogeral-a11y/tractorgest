@@ -25,6 +25,31 @@
         </p>
     </div>
 
+    <!-- ZONA DE CRIAÇÃO (SÓ APARECE NO POSTO 1) -->
+    {% if e_posto_inicial and not tarefa_em_curso %}
+        <div class="card" style="border-left: 5px solid #ffc107; background-color: #fff3cd;">
+            <h2 style="color: #856404;">🚀 Iniciar Nova Produção</h2>
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="criar_ordem" value="1">
+                
+                <div style="margin-bottom: 10px;">
+                    <label>Número de Série:</label>
+                    <input type="text" name="numero_serie" placeholder="Ex: SN-2024-001" required style="padding: 8px; width: 100%; max-width: 300px;">
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <label>Acessório:</label>
+                    <select name="acessorio" required style="padding: 8px; width: 100%; max-width: 300px;">
+                        {% for a in acessorios %}
+                            <option value="{{ a.id }}">{{ a.nome }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-start">CRIAR E INICIAR</button>
+            </form>
+        </div>
+    {% endif %}
+
     <!-- TAREFA EM CURSO -->
     {% if tarefa_em_curso %}
         <div class="card destaque">

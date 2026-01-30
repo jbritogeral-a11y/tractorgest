@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Acessorio, OrdemProducao, TarefaProducao, Funcionario, Posto
+from .models import Acessorio, OrdemProducao, TarefaProducao, Funcionario, Posto, Peca
 
 class TarefaInline(admin.TabularInline):
     model = TarefaProducao
@@ -17,6 +17,7 @@ class OrdemProducaoAdmin(admin.ModelAdmin):
 @admin.register(Acessorio)
 class AcessorioAdmin(admin.ModelAdmin):
     list_display = ('nome',)
+    filter_horizontal = ('pecas_necessarias',) # Interface bonita para selecionar muitas peças
 
 @admin.register(Funcionario)
 class FuncionarioAdmin(admin.ModelAdmin):
@@ -27,3 +28,8 @@ class FuncionarioAdmin(admin.ModelAdmin):
 class PostoAdmin(admin.ModelAdmin):
     list_display = ('ordem_sequencia', 'nome')
     ordering = ('ordem_sequencia',)
+
+@admin.register(Peca)
+class PecaAdmin(admin.ModelAdmin):
+    list_display = ('referencia', 'nome', 'stock_atual')
+    search_fields = ('referencia', 'nome')

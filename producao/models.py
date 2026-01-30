@@ -22,9 +22,19 @@ class Funcionario(models.Model):
     def __str__(self):
         return self.nome
 
+class Peca(models.Model):
+    """Matéria-prima ou componentes necessários para criar um acessório"""
+    nome = models.CharField(max_length=200)
+    referencia = models.CharField(max_length=50, unique=True)
+    stock_atual = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f"{self.referencia} - {self.nome}"
+
 class Acessorio(models.Model):
     nome = models.CharField(max_length=200)
     descricao = models.TextField(blank=True)
+    pecas_necessarias = models.ManyToManyField(Peca, blank=True, help_text="Peças necessárias para fabricar este acessório")
     
     def __str__(self):
         return self.nome
@@ -43,7 +53,7 @@ class OrdemProducao(models.Model):
     posto_atual = models.ForeignKey(Posto, on_delete=models.PROTECT, null=True, blank=True)
     
     # Campo para agendar/atribuir a um funcionário específico (opcional)
-    funcionario_designado = models.ForeignKey(Funcionario, on_delete=models.SET_NULL, null=True, blank=True, help_text="Atribuir a um funcionário específico (Opcional)")
+    funcionario_designado = models.ForeignKey(Funcionario, on_delete=models.PROTECT, null=True, blank=True, help_text="Atribuir a um funcionário específico (Opcional)")
     
     status_global = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDENTE')
 
@@ -53,7 +63,7 @@ class OrdemProducao(models.Model):
 class TarefaProducao(models.Model):
     ordem = models.ForeignKey(OrdemProducao, on_delete=models.CASCADE, related_name='tarefas')
     posto = models.ForeignKey(Posto, on_delete=models.PROTECT)
-    funcionario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    funcionario = models.ForeignKey(User, on_delete=models.PROTECT, null=True)
     inicio = models.DateTimeField(null=True, blank=True)
     fim = models.DateTimeField(null=True, blank=True)
     concluido = models.BooleanField(default=False)
