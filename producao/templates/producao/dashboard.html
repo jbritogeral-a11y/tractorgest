@@ -39,13 +39,13 @@
         
         <!-- 1. TAREFAS AGENDADAS (PRIORITÁRIAS) -->
         {% if ordens_agendadas %}
-            <h2 style="color: #0056b3;">📅 Agendadas para Si</h2>
+            <h2 style="color: #0056b3;">📅 As Suas Tarefas (Atribuídas)</h2>
             {% for ordem in ordens_agendadas %}
                 <div class="card agendada">
                     <h3>Ordem: {{ ordem.numero_serie }} <span style="font-size:0.6em">⭐ Prioritário</span></h3>
                     <span style="background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.8em;">📍 {{ ordem.posto_atual.nome }}</span>
                     <p>Acessório: <strong>{{ ordem.acessorio.nome }}</strong></p>
-                    <a href="{% url 'iniciar_tarefa' ordem.id %}" class="btn btn-start" style="background-color: #007bff;">INICIAR AGENDAMENTO</a>
+                    <a href="{% url 'iniciar_tarefa' ordem.id %}" class="btn btn-start" style="background-color: #007bff;">INICIAR TAREFA</a>
                 </div>
             {% endfor %}
         {% endif %}
