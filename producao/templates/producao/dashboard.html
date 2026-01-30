@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posto de Trabalho</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f4f9; padding: 20px; }
+        .header { background: #333; color: #fff; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .card { background: white; padding: 20px; margin-bottom: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn { display: inline-block; padding: 10px 20px; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+        .btn-start { background-color: #28a745; } /* Verde */
+        .btn-end { background-color: #dc3545; }   /* Vermelho */
+        .destaque { border-left: 5px solid #28a745; background-color: #e8f5e9; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>{{ posto_nome }}</h1>
+        <p>Operador: <strong>{{ user.username }}</strong></p>
+    </div>
+
+    <!-- TAREFA EM CURSO -->
+    {% if tarefa_em_curso %}
+        <div class="card destaque">
+            <h2 style="color: #2e7d32;">EM EXECUÇÃO ⏱️</h2>
+            <h3>Ordem: {{ tarefa_em_curso.ordem.numero_serie }}</h3>
+            <p>Acessório: <strong>{{ tarefa_em_curso.ordem.acessorio.nome }}</strong></p>
+            <p>Início: {{ tarefa_em_curso.inicio|date:"H:i" }}</p>
+            <br>
+            <a href="{% url 'finalizar_tarefa' tarefa_em_curso.id %}" class="btn btn-end">CONCLUIR TAREFA</a>
+        </div>
+    {% else %}
+        <!-- LISTA DE TAREFAS PENDENTES -->
+        <h2>Tarefas Disponíveis</h2>
+        {% for ordem in ordens_pendentes %}
+            <div class="card">
+                <h3>Ordem: {{ ordem.numero_serie }}</h3>
+                <p>Acessório: {{ ordem.acessorio.nome }}</p>
+                <a href="{% url 'iniciar_tarefa' ordem.id %}" class="btn btn-start">INICIAR TRABALHO</a>
+            </div>
+        {% empty %}
+            <p>Não há tarefas pendentes neste posto de momento.</p>
+        {% endfor %}
+    {% endif %}
+
+    <!-- Cria também um ficheiro erro_perfil.html na mesma pasta se quiseres tratar o erro bonitinho -->
+</body>
+</html>
