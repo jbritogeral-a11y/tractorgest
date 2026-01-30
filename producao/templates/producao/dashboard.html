@@ -69,6 +69,9 @@
                 <div class="card agendada">
                     <h3>Ordem: {{ ordem.numero_serie }} <span style="font-size:0.6em">⭐ Prioritário</span></h3>
                     <span style="background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.8em;">📍 {{ ordem.posto_atual.nome }}</span>
+                    {% if ordem.data_prevista %}
+                        <span style="color: #c62828; font-weight: bold; font-size: 0.9em; margin-left: 10px;">📅 Para: {{ ordem.data_prevista|date:"d/m/Y" }}</span>
+                    {% endif %}
                     <p>Acessório: <strong>{{ ordem.acessorio.nome }}</strong></p>
                     <a href="{% url 'iniciar_tarefa' ordem.id %}" class="btn btn-start" style="background-color: #007bff;">INICIAR TAREFA</a>
                 </div>

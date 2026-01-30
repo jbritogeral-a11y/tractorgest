@@ -54,6 +54,7 @@ class OrdemProducao(models.Model):
     
     # Campo para agendar/atribuir a um funcionário específico (opcional)
     funcionario_designado = models.ForeignKey(Funcionario, on_delete=models.PROTECT, null=True, blank=True, help_text="Atribuir a um funcionário específico (Opcional)")
+    data_prevista = models.DateField(null=True, blank=True, help_text="Data prevista para conclusão")
     
     status_global = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDENTE')
 
