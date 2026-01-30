@@ -9,6 +9,7 @@ class TarefaInline(admin.TabularInline):
 @admin.register(OrdemProducao)
 class OrdemProducaoAdmin(admin.ModelAdmin):
     list_display = ('numero_serie', 'acessorio', 'posto_atual', 'funcionario_designado', 'status_global')
+    list_editable = ('funcionario_designado',) # <--- Permite agendar diretamente na lista
     list_filter = ('posto_atual', 'status_global', 'acessorio')
     search_fields = ('numero_serie',)
     inlines = [TarefaInline]

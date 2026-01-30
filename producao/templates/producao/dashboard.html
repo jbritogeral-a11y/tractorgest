@@ -12,6 +12,7 @@
         .btn-start { background-color: #28a745; } /* Verde */
         .btn-end { background-color: #dc3545; }   /* Vermelho */
         .destaque { border-left: 5px solid #28a745; background-color: #e8f5e9; }
+        .agendada { border-left: 5px solid #007bff; background-color: #e3f2fd; } /* Azul para agendadas */
     </style>
 </head>
 <body>
@@ -35,20 +36,35 @@
             <a href="{% url 'finalizar_tarefa' tarefa_em_curso.id %}" class="btn btn-end">CONCLUIR TAREFA</a>
         </div>
     {% else %}
-        <!-- LISTA DE TAREFAS PENDENTES -->
-        <h2>Tarefas Disponíveis</h2>
-        {% for ordem in ordens_pendentes %}
+        
+        <!-- 1. TAREFAS AGENDADAS (PRIORITÁRIAS) -->
+        {% if ordens_agendadas %}
+            <h2 style="color: #0056b3;">📅 Agendadas para Si</h2>
+            {% for ordem in ordens_agendadas %}
+                <div class="card agendada">
+                    <h3>Ordem: {{ ordem.numero_serie }} <span style="font-size:0.6em">⭐ Prioritário</span></h3>
+                    <span style="background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.8em;">📍 {{ ordem.posto_atual.nome }}</span>
+                    <p>Acessório: <strong>{{ ordem.acessorio.nome }}</strong></p>
+                    <a href="{% url 'iniciar_tarefa' ordem.id %}" class="btn btn-start" style="background-color: #007bff;">INICIAR AGENDAMENTO</a>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- 2. TAREFAS GERAIS (POOL) -->
+        <h2>Tarefas Gerais</h2>
+        {% for ordem in ordens_gerais %}
             <div class="card">
                 <h3>Ordem: {{ ordem.numero_serie }}</h3>
                 <span style="background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.8em;">
                     📍 {{ ordem.posto_atual.nome }}
                 </span>
                 <p>Acessório: {{ ordem.acessorio.nome }}</p>
-                {% if ordem.funcionario_designado %}<p style="color: blue;">👤 Atribuído a si</p>{% endif %}
                 <a href="{% url 'iniciar_tarefa' ordem.id %}" class="btn btn-start">INICIAR TRABALHO</a>
             </div>
         {% empty %}
-            <p>Não há tarefas pendentes neste posto de momento.</p>
+            {% if not ordens_agendadas %}
+                <p>Não há tarefas pendentes neste posto de momento.</p>
+            {% endif %}
         {% endfor %}
     {% endif %}
 

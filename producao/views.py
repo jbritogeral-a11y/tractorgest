@@ -23,25 +23,28 @@ def dashboard_funcionario(request):
         concluido=False
     ).first()
 
-    # 3. Procura ordens pendentes NOS POSTOS AUTORIZADOS
-    ordens_pendentes = OrdemProducao.objects.filter(
+    # 3. Base de procura: Ordens pendentes NOS POSTOS AUTORIZADOS
+    base_ordens = OrdemProducao.objects.filter(
         posto_atual__in=postos_autorizados
     ).exclude(status_global='CONCLUIDO')
 
-    # Filtro de Agendamento: Mostra se for para MIM ou se for para QUALQUER UM (None)
-    ordens_pendentes = ordens_pendentes.filter(
-        Q(funcionario_designado=request.user) | Q(funcionario_designado__isnull=True)
-    )
-
     # Se já estiver a trabalhar numa, não mostramos essa na lista de "pendentes" para não confundir
     if tarefa_em_curso:
-        ordens_pendentes = ordens_pendentes.exclude(id=tarefa_em_curso.ordem.id)
+        base_ordens = base_ordens.exclude(id=tarefa_em_curso.ordem.id)
+
+    # SISTEMA DE AGENDAMENTO: Separar o que é "Meu" do que é "Geral"
+    # Lista 1: Agendadas especificamente para este funcionário (Prioridade Alta)
+    ordens_agendadas = base_ordens.filter(funcionario_designado=request.user)
+
+    # Lista 2: Livres (Ninguém designado) - Qualquer um no posto pode pegar
+    ordens_gerais = base_ordens.filter(funcionario_designado__isnull=True)
 
     return render(request, 'producao/dashboard.html', {
         'funcionario': funcionario,
         'postos': postos_autorizados,
         'tarefa_em_curso': tarefa_em_curso,
-        'ordens_pendentes': ordens_pendentes,
+        'ordens_agendadas': ordens_agendadas,
+        'ordens_gerais': ordens_gerais,
     })
 
 @login_required
