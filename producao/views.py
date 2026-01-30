@@ -1,18 +1,34 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from django.db.models import Q
+from django.db.models import Q, Count
+from django.contrib.admin.views.decorators import staff_member_required
 from .models import OrdemProducao, TarefaProducao, Funcionario, Posto, Acessorio
 
-@login_required
+def login_funcionario(request):
+    if request.method == 'POST':
+        codigo = request.POST.get('codigo')
+        try:
+            funcionario = Funcionario.objects.get(codigo=codigo)
+            request.session['funcionario_id'] = funcionario.id
+            return redirect('dashboard_funcionario')
+        except Funcionario.DoesNotExist:
+            return render(request, 'producao/login_funcionario.html', {'erro': 'Código inválido'})
+    return render(request, 'producao/login_funcionario.html')
+
+def logout_funcionario(request):
+    if 'funcionario_id' in request.session:
+        del request.session['funcionario_id']
+    return redirect('login_funcionario')
+
 def dashboard_funcionario(request):
-    # 1. Tenta obter o perfil do funcionário
+    # Verificação de Sessão Manual (Substitui o @login_required)
+    if 'funcionario_id' not in request.session:
+        return redirect('login_funcionario')
+
     try:
-        funcionario = request.user.funcionario
+        funcionario = Funcionario.objects.get(id=request.session['funcionario_id'])
     except Funcionario.DoesNotExist:
-        return render(request, 'producao/erro_perfil.html', {
-            'mensagem': 'Utilizador sem Perfil de Funcionário. Contacte o Admin.'
-        })
+        return redirect('logout_funcionario')
 
     # Obtém todos os postos onde este funcionário pode trabalhar
     postos_autorizados = funcionario.postos.all()
@@ -45,7 +61,7 @@ def dashboard_funcionario(request):
 
     # 2. Verifica se o funcionário já tem alguma tarefa "aberta" (cronómetro a contar)
     tarefa_em_curso = TarefaProducao.objects.filter(
-        funcionario=request.user,
+        funcionario=funcionario,
         concluido=False
     ).first()
 
@@ -75,17 +91,15 @@ def dashboard_funcionario(request):
         'ordens_gerais': ordens_gerais,
     })
 
-@login_required
 def iniciar_tarefa(request, ordem_id):
+    if 'funcionario_id' not in request.session:
+        return redirect('login_funcionario')
+        
     ordem = get_object_or_404(OrdemProducao, id=ordem_id)
-    
-    try:
-        funcionario = request.user.funcionario
-    except Funcionario.DoesNotExist:
-        return redirect('dashboard_funcionario')
+    funcionario = Funcionario.objects.get(id=request.session['funcionario_id'])
 
     # Impede iniciar duas tarefas ao mesmo tempo
-    if TarefaProducao.objects.filter(funcionario=request.user, concluido=False).exists():
+    if TarefaProducao.objects.filter(funcionario=funcionario, concluido=False).exists():
         return redirect('dashboard_funcionario')
 
     # Verifica se o funcionário tem acesso ao posto atual da ordem
@@ -96,7 +110,7 @@ def iniciar_tarefa(request, ordem_id):
     TarefaProducao.objects.create(
         ordem=ordem,
         posto=ordem.posto_atual,
-        funcionario=request.user,
+        funcionario=funcionario,
         inicio=timezone.now()
     )
 
@@ -106,9 +120,31 @@ def iniciar_tarefa(request, ordem_id):
 
     return redirect('dashboard_funcionario')
 
-@login_required
 def finalizar_tarefa(request, tarefa_id):
-    tarefa = get_object_or_404(TarefaProducao, id=tarefa_id, funcionario=request.user)
+    if 'funcionario_id' not in request.session:
+        return redirect('login_funcionario')
+        
+    funcionario = Funcionario.objects.get(id=request.session['funcionario_id'])
+    tarefa = get_object_or_404(TarefaProducao, id=tarefa_id, funcionario=funcionario)
     # Chama a função que criámos no models.py (fecha tempo e muda posto)
     tarefa.finalizar_tarefa() 
     return redirect('dashboard_funcionario')
+
+# --- DASHBOARD DE ESTATÍSTICAS (ADMIN) ---
+@staff_member_required
+def dashboard_estatisticas(request):
+    # 1. Total Produzido
+    total_concluido = OrdemProducao.objects.filter(status_global='CONCLUIDO').count()
+    
+    # 2. Peças por Funcionário
+    pecas_por_func = TarefaProducao.objects.filter(concluido=True).values('funcionario__nome').annotate(total=Count('id'))
+    
+    # 3. Ordens Atrasadas (Agendadas para o passado e não concluídas)
+    hoje = timezone.now().date()
+    atrasadas = OrdemProducao.objects.filter(data_prevista__lt=hoje).exclude(status_global='CONCLUIDO')
+
+    return render(request, 'producao/estatisticas.html', {
+        'total_concluido': total_concluido,
+        'pecas_por_func': pecas_por_func,
+        'atrasadas': atrasadas,
+    })

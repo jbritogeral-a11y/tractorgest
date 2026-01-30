@@ -14,8 +14,8 @@ class Posto(models.Model):
         return f"{self.ordem_sequencia} - {self.nome}"
 
 class Funcionario(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
     nome = models.CharField(max_length=100, help_text="Nome completo do funcionário (ex: João Silva)")
+    codigo = models.CharField(max_length=20, unique=True, help_text="Código de acesso (PIN) para login no posto")
     postos = models.ManyToManyField(Posto, related_name='funcionarios', help_text="Postos onde este funcionário pode trabalhar")
     telefone = models.CharField(max_length=20, blank=True)
 
@@ -36,6 +36,10 @@ class Acessorio(models.Model):
     descricao = models.TextField(blank=True)
     pecas_necessarias = models.ManyToManyField(Peca, blank=True, help_text="Peças necessárias para fabricar este acessório")
     
+    class Meta:
+        verbose_name = "Tipo de Produto"
+        verbose_name_plural = "Tipos de Produto"
+
     def __str__(self):
         return self.nome
 
@@ -46,7 +50,7 @@ class OrdemProducao(models.Model):
         ('CONCLUIDO', 'Concluído'),
     ]
     numero_serie = models.CharField(max_length=50, unique=True)
-    acessorio = models.ForeignKey(Acessorio, on_delete=models.PROTECT)
+    acessorio = models.ForeignKey(Acessorio, on_delete=models.PROTECT, verbose_name="Tipo de Produto")
     data_criacao = models.DateTimeField(auto_now_add=True)
     
     # Agora liga à tabela Posto em vez de ser um número fixo
@@ -64,7 +68,7 @@ class OrdemProducao(models.Model):
 class TarefaProducao(models.Model):
     ordem = models.ForeignKey(OrdemProducao, on_delete=models.CASCADE, related_name='tarefas')
     posto = models.ForeignKey(Posto, on_delete=models.PROTECT)
-    funcionario = models.ForeignKey(User, on_delete=models.PROTECT, null=True)
+    funcionario = models.ForeignKey(Funcionario, on_delete=models.PROTECT, null=True)
     inicio = models.DateTimeField(null=True, blank=True)
     fim = models.DateTimeField(null=True, blank=True)
     concluido = models.BooleanField(default=False)
@@ -88,3 +92,9 @@ class TarefaProducao(models.Model):
         
         self.ordem.save()
         self.save()
+
+class Agendamento(OrdemProducao):
+    class Meta:
+        proxy = True
+        verbose_name = "Agendamento (Calendário)"
+        verbose_name_plural = "Agendamentos (Calendário)"

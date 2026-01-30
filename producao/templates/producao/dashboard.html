@@ -23,6 +23,7 @@
         <p style="font-size: 0.9em; color: #ccc;">
             Postos: {% for p in postos %}{{ p.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}
         </p>
+        <a href="{% url 'logout_funcionario' %}" class="btn" style="background-color: #666; font-size: 0.8em; float: right; margin-top: -40px;">SAIR</a>
     </div>
 
     <!-- ZONA DE CRIAÇÃO (SÓ APARECE NO POSTO 1) -->
@@ -38,7 +39,7 @@
                     <input type="text" name="numero_serie" placeholder="Ex: SN-2024-001" required style="padding: 8px; width: 100%; max-width: 300px;">
                 </div>
                 <div style="margin-bottom: 10px;">
-                    <label>Acessório:</label>
+                    <label>Tipo de Produto:</label>
                     <select name="acessorio" required style="padding: 8px; width: 100%; max-width: 300px;">
                         {% for a in acessorios %}
                             <option value="{{ a.id }}">{{ a.nome }}</option>
@@ -55,7 +56,7 @@
         <div class="card destaque">
             <h2 style="color: #2e7d32;">EM EXECUÇÃO ⏱️</h2>
             <h3>Ordem: {{ tarefa_em_curso.ordem.numero_serie }}</h3>
-            <p>Acessório: <strong>{{ tarefa_em_curso.ordem.acessorio.nome }}</strong></p>
+            <p>Tipo de Produto: <strong>{{ tarefa_em_curso.ordem.acessorio.nome }}</strong></p>
             <p>Início: {{ tarefa_em_curso.inicio|date:"H:i" }}</p>
             <br>
             <a href="{% url 'finalizar_tarefa' tarefa_em_curso.id %}" class="btn btn-end">CONCLUIR TAREFA</a>
@@ -72,7 +73,7 @@
                     {% if ordem.data_prevista %}
                         <span style="color: #c62828; font-weight: bold; font-size: 0.9em; margin-left: 10px;">📅 Para: {{ ordem.data_prevista|date:"d/m/Y" }}</span>
                     {% endif %}
-                    <p>Acessório: <strong>{{ ordem.acessorio.nome }}</strong></p>
+                    <p>Tipo de Produto: <strong>{{ ordem.acessorio.nome }}</strong></p>
                     <a href="{% url 'iniciar_tarefa' ordem.id %}" class="btn btn-start" style="background-color: #007bff;">INICIAR TAREFA</a>
                 </div>
             {% endfor %}
@@ -86,7 +87,7 @@
                 <span style="background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.8em;">
                     📍 {{ ordem.posto_atual.nome }}
                 </span>
-                <p>Acessório: {{ ordem.acessorio.nome }}</p>
+                <p>Tipo de Produto: {{ ordem.acessorio.nome }}</p>
                 <a href="{% url 'iniciar_tarefa' ordem.id %}" class="btn btn-start">INICIAR TRABALHO</a>
             </div>
         {% empty %}

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Estatísticas de Produção</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; background: #f4f6f8; }
+        .metric-box { background: white; padding: 20px; border-radius: 8px; display: inline-block; margin-right: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: white; }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background-color: #f8f9fa; }
+        h1, h2 { color: #333; }
+        a { text-decoration: none; color: #007bff; }
+    </style>
+</head>
+<body>
+    <h1>Dashboard de Gestão</h1>
+    <p><a href="/admin/">⬅️ Voltar ao Admin</a></p>
+    <hr>
+    
+    <div class="metric-box">
+        <h3>Total Produzido</h3>
+        <p style="font-size: 2em; font-weight: bold; color: #28a745; margin: 0;">{{ total_concluido }}</p>
+    </div>
+
+    <h2>⚠️ Ordens Atrasadas</h2>
+    <table>
+        <tr><th>Nº Série</th><th>Tipo de Produto</th><th>Data Prevista</th><th>Posto Atual</th></tr>
+        {% for o in atrasadas %}
+        <tr>
+            <td>{{ o.numero_serie }}</td>
+            <td>{{ o.acessorio.nome }}</td>
+            <td style="color:red; font-weight: bold;">{{ o.data_prevista|date:"d/m/Y" }}</td>
+            <td>{{ o.posto_atual.nome }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4">Nenhuma ordem atrasada. Bom trabalho!</td></tr>
+        {% endfor %}
+    </table>
+
+    <h2>🏆 Produção por Funcionário</h2>
+    <ul>
+        {% for item in pecas_por_func %}
+            <li><strong>{{ item.funcionario__nome }}</strong>: {{ item.total }} tarefas concluídas</li>
+        {% empty %}
+            <li>Ainda sem dados de produção.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>
