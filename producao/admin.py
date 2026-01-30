@@ -20,7 +20,7 @@ class AcessorioAdmin(admin.ModelAdmin):
 
 @admin.register(Funcionario)
 class FuncionarioAdmin(admin.ModelAdmin):
-    list_display = ('user', 'telefone')
+    list_display = ('nome', 'user', 'telefone')
     filter_horizontal = ('postos',)
 
 @admin.register(Posto)

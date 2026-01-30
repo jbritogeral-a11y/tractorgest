@@ -19,7 +19,7 @@
 
     <div class="header">
         <h1>Painel de Produção</h1>
-        <p>Operador: <strong>{{ funcionario.user.username }}</strong></p>
+        <p>Operador: <strong>{{ funcionario.nome }}</strong></p>
         <p style="font-size: 0.9em; color: #ccc;">
             Postos: {% for p in postos %}{{ p.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}
         </p>

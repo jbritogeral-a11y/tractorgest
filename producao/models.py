@@ -15,11 +15,12 @@ class Posto(models.Model):
 
 class Funcionario(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
+    nome = models.CharField(max_length=100, help_text="Nome completo do funcionário (ex: João Silva)")
     postos = models.ManyToManyField(Posto, related_name='funcionarios', help_text="Postos onde este funcionário pode trabalhar")
     telefone = models.CharField(max_length=20, blank=True)
 
     def __str__(self):
-        return self.user.username
+        return self.nome
 
 class Acessorio(models.Model):
     nome = models.CharField(max_length=200)
@@ -42,7 +43,7 @@ class OrdemProducao(models.Model):
     posto_atual = models.ForeignKey(Posto, on_delete=models.PROTECT, null=True, blank=True)
     
     # Campo para agendar/atribuir a um funcionário específico (opcional)
-    funcionario_designado = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, help_text="Atribuir a um funcionário específico (Opcional)")
+    funcionario_designado = models.ForeignKey(Funcionario, on_delete=models.SET_NULL, null=True, blank=True, help_text="Atribuir a um funcionário específico (Opcional)")
     
     status_global = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDENTE')
 

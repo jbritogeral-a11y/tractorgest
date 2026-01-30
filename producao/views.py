@@ -34,7 +34,7 @@ def dashboard_funcionario(request):
 
     # SISTEMA DE AGENDAMENTO: Separar o que é "Meu" do que é "Geral"
     # Lista 1: Agendadas especificamente para este funcionário (Prioridade Alta)
-    ordens_agendadas = base_ordens.filter(funcionario_designado=request.user)
+    ordens_agendadas = base_ordens.filter(funcionario_designado=funcionario)
 
     # Lista 2: Livres (Ninguém designado) - Qualquer um no posto pode pegar
     ordens_gerais = base_ordens.filter(funcionario_designado__isnull=True)
