@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Funcionário</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .login-card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        button:hover { background-color: #0056b3; }
+        h2 { color: #333; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>Acesso à Produção 🚜</h2>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if form.errors %}
+                <p style="color: red; font-size: 0.9em;">Utilizador ou senha incorretos.</p>
+            {% endif %}
+
+            <input type="text" name="username" placeholder="Nome de Utilizador" required autofocus>
+            <input type="password" name="password" placeholder="Senha" required>
+            
+            <button type="submit">Entrar</button>
+        </form>
+        
+        <p style="margin-top: 20px; font-size: 0.8em; color: #666;">Sistema de Gestão de Tratores</p>
+    </div>
+</body>
+</html>
