@@ -2,22 +2,24 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
-# Definição dos Postos
-POSTOS = [
-    (1, 'Posto 1 - Preparação'),
-    (2, 'Posto 2 - Pré-Montagem'),
-    (3, 'Posto 3 - Soldadura'),
-    (4, 'Posto 4 - Limpeza'),
-    (5, 'Posto 5 - Pintura'),
-    (6, 'Posto 6 - Montagem'),
-]
+class Posto(models.Model):
+    nome = models.CharField(max_length=100)
+    ordem_sequencia = models.IntegerField(unique=True, help_text="Ordem do posto no fluxo (ex: 1, 2, 3...)")
+    descricao = models.TextField(blank=True)
 
-class PerfilFuncionario(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    posto_padrao = models.IntegerField(choices=POSTOS, default=1)
+    class Meta:
+        ordering = ['ordem_sequencia']
 
     def __str__(self):
-        return f"{self.user.username} - {self.get_posto_padrao_display()}"
+        return f"{self.ordem_sequencia} - {self.nome}"
+
+class Funcionario(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    postos = models.ManyToManyField(Posto, related_name='funcionarios', help_text="Postos onde este funcionário pode trabalhar")
+    telefone = models.CharField(max_length=20, blank=True)
+
+    def __str__(self):
+        return self.user.username
 
 class Acessorio(models.Model):
     nome = models.CharField(max_length=200)
@@ -35,7 +37,13 @@ class OrdemProducao(models.Model):
     numero_serie = models.CharField(max_length=50, unique=True)
     acessorio = models.ForeignKey(Acessorio, on_delete=models.PROTECT)
     data_criacao = models.DateTimeField(auto_now_add=True)
-    posto_atual = models.IntegerField(choices=POSTOS, default=1)
+    
+    # Agora liga à tabela Posto em vez de ser um número fixo
+    posto_atual = models.ForeignKey(Posto, on_delete=models.PROTECT, null=True, blank=True)
+    
+    # Campo para agendar/atribuir a um funcionário específico (opcional)
+    funcionario_designado = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, help_text="Atribuir a um funcionário específico (Opcional)")
+    
     status_global = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDENTE')
 
     def __str__(self):
@@ -43,7 +51,7 @@ class OrdemProducao(models.Model):
 
 class TarefaProducao(models.Model):
     ordem = models.ForeignKey(OrdemProducao, on_delete=models.CASCADE, related_name='tarefas')
-    posto = models.IntegerField(choices=POSTOS)
+    posto = models.ForeignKey(Posto, on_delete=models.PROTECT)
     funcionario = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     inicio = models.DateTimeField(null=True, blank=True)
     fim = models.DateTimeField(null=True, blank=True)
@@ -56,9 +64,13 @@ class TarefaProducao(models.Model):
     def finalizar_tarefa(self):
         self.fim = timezone.now()
         self.concluido = True
-        # Lógica automática: Se não for o último posto, avança para o próximo
-        if self.posto < 6:
-            self.ordem.posto_atual = self.posto + 1
+        
+        # Lógica automática: Procura o próximo posto baseado na sequência
+        proximo = Posto.objects.filter(ordem_sequencia__gt=self.posto.ordem_sequencia).order_by('ordem_sequencia').first()
+        
+        if proximo:
+            self.ordem.posto_atual = proximo
+            self.ordem.status_global = 'PENDENTE' # Reseta status para o novo posto
         else:
             self.ordem.status_global = 'CONCLUIDO'
         

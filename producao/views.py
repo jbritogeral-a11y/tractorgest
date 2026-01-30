@@ -1,19 +1,21 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
-from .models import OrdemProducao, TarefaProducao, PerfilFuncionario
+from django.db.models import Q
+from .models import OrdemProducao, TarefaProducao, Funcionario
 
 @login_required
 def dashboard_funcionario(request):
-    # 1. Tenta obter o perfil do funcionário para saber o posto
+    # 1. Tenta obter o perfil do funcionário
     try:
-        perfil = request.user.perfilfuncionario
-    except PerfilFuncionario.DoesNotExist:
+        funcionario = request.user.funcionario
+    except Funcionario.DoesNotExist:
         return render(request, 'producao/erro_perfil.html', {
             'mensagem': 'Utilizador sem Perfil de Funcionário. Contacte o Admin.'
         })
 
-    posto_id = perfil.posto_padrao
+    # Obtém todos os postos onde este funcionário pode trabalhar
+    postos_autorizados = funcionario.postos.all()
     
     # 2. Verifica se o funcionário já tem alguma tarefa "aberta" (cronómetro a contar)
     tarefa_em_curso = TarefaProducao.objects.filter(
@@ -21,18 +23,23 @@ def dashboard_funcionario(request):
         concluido=False
     ).first()
 
-    # 3. Procura ordens que estão neste posto à espera de atenção
-    # Excluímos as que já estão concluídas globalmente
+    # 3. Procura ordens pendentes NOS POSTOS AUTORIZADOS
     ordens_pendentes = OrdemProducao.objects.filter(
-        posto_atual=posto_id
+        posto_atual__in=postos_autorizados
     ).exclude(status_global='CONCLUIDO')
+
+    # Filtro de Agendamento: Mostra se for para MIM ou se for para QUALQUER UM (None)
+    ordens_pendentes = ordens_pendentes.filter(
+        Q(funcionario_designado=request.user) | Q(funcionario_designado__isnull=True)
+    )
 
     # Se já estiver a trabalhar numa, não mostramos essa na lista de "pendentes" para não confundir
     if tarefa_em_curso:
         ordens_pendentes = ordens_pendentes.exclude(id=tarefa_em_curso.ordem.id)
 
     return render(request, 'producao/dashboard.html', {
-        'posto_nome': perfil.get_posto_padrao_display(),
+        'funcionario': funcionario,
+        'postos': postos_autorizados,
         'tarefa_em_curso': tarefa_em_curso,
         'ordens_pendentes': ordens_pendentes,
     })
@@ -42,18 +49,22 @@ def iniciar_tarefa(request, ordem_id):
     ordem = get_object_or_404(OrdemProducao, id=ordem_id)
     
     try:
-        perfil = request.user.perfilfuncionario
-    except PerfilFuncionario.DoesNotExist:
+        funcionario = request.user.funcionario
+    except Funcionario.DoesNotExist:
         return redirect('dashboard_funcionario')
 
     # Impede iniciar duas tarefas ao mesmo tempo
     if TarefaProducao.objects.filter(funcionario=request.user, concluido=False).exists():
         return redirect('dashboard_funcionario')
 
+    # Verifica se o funcionário tem acesso ao posto atual da ordem
+    if ordem.posto_atual not in funcionario.postos.all():
+        return redirect('dashboard_funcionario') # Ou mostrar erro de permissão
+
     # Cria o registo de início de trabalho
     TarefaProducao.objects.create(
         ordem=ordem,
-        posto=perfil.posto_padrao,
+        posto=ordem.posto_atual,
         funcionario=request.user,
         inicio=timezone.now()
     )

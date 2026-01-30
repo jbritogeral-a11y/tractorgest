@@ -17,8 +17,11 @@
 <body>
 
     <div class="header">
-        <h1>{{ posto_nome }}</h1>
-        <p>Operador: <strong>{{ user.username }}</strong></p>
+        <h1>Painel de Produção</h1>
+        <p>Operador: <strong>{{ funcionario.user.username }}</strong></p>
+        <p style="font-size: 0.9em; color: #ccc;">
+            Postos: {% for p in postos %}{{ p.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}
+        </p>
     </div>
 
     <!-- TAREFA EM CURSO -->
@@ -37,7 +40,11 @@
         {% for ordem in ordens_pendentes %}
             <div class="card">
                 <h3>Ordem: {{ ordem.numero_serie }}</h3>
+                <span style="background: #eee; padding: 2px 8px; border-radius: 4px; font-size: 0.8em;">
+                    📍 {{ ordem.posto_atual.nome }}
+                </span>
                 <p>Acessório: {{ ordem.acessorio.nome }}</p>
+                {% if ordem.funcionario_designado %}<p style="color: blue;">👤 Atribuído a si</p>{% endif %}
                 <a href="{% url 'iniciar_tarefa' ordem.id %}" class="btn btn-start">INICIAR TRABALHO</a>
             </div>
         {% empty %}
